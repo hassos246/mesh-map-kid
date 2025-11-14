@@ -11,7 +11,7 @@ export async function onRequest(context) {
   const name = data.name;
   const path = data.path ?? [];
 
-  const key = `${id}|${lat}|${lon}`;
+  const key = `${id}|${lat.toFixed(4)}|${lon.toFixed(4)}`;
   await store.put(key, "", {
     metadata: { time: time, id: id, name: name, lat: lat, lon: lon, path: path }
   });

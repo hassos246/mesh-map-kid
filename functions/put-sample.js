@@ -9,7 +9,7 @@ export async function onRequest(context) {
   const time = Date.now();
   const path = data.path ?? [];
 
-  const key = `${lat}|${lon}`;
+  const key = `${lat.toFixed(4)}|${lon.toFixed(4)}`;
   const resp = await store.getWithMetadata(key);
   const metadata = { time: time, lat: lat, lon: lon, path: path };
 
