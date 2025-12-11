@@ -584,10 +584,7 @@ async function onConnected() {
       ? `${selfInfo.name}`
       : "[No device]";
 
-    setStatus(
-      `Connected to ${selfInfo?.name ?? "MeshCore"}`,
-      "text-emerald-300"
-    );
+    setStatus("Connected", "text-emerald-300");
 
     // Try to ensure channel exists.
     try {
@@ -600,7 +597,7 @@ async function onConnected() {
     updateControlsForConnection(true);
   } catch (e) {
     console.error("Error during initial sync", e);
-    setStatus("Connected, but failed to init", "text-amber-300");
+    setStatus("Connected, Failed init", "text-amber-300");
     await handleDisconnect();
   }
 }
