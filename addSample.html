@@ -17,6 +17,10 @@
       <input type="text" id="path" name="path">
     </div>
     <div class="form-item">
+      <label for="path">Observed:</label>
+      <input type="checkbox" id="observed" name="observed">
+    </div>
+    <div class="form-item">
       <button tabindex="0" id="submit" name="submit">Submit</button>
     </div>
   </div>
@@ -28,6 +32,7 @@
     const $ = (id) => document.getElementById(id);
     const locTxt = $('loc');
     const pathTxt = $('path');
+    const observedCB = $('observed');
     const statusDiv = $('status');
 
     function setStatus(msg) {
@@ -50,7 +55,8 @@
       const payload = {
         lat: lat,
         lon: lon,
-        path: pathVal !== "" ? pathVal.split(',') : []
+        path: pathVal !== "" ? pathVal.split(',') : [],
+        observed: observedCB.checked
       };
 
       setStatus('');
