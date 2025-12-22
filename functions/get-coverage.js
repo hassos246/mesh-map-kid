@@ -8,16 +8,22 @@ export async function onRequest(context) {
     cursor = coverage.cursor ?? null;
     await Promise.all(coverage.keys.map(async c => {
       const values = (await store.get(c.name, "json")) ?? []
+
       // Old coverage items only have "lastHeard".
-      const lastHeardTime = c.metadata.heard ? c.metadata.lastHeard : 0;
-      const updatedTime = c.metadata.updated ?? c.metadata.lastHeard;
+      const lastHeard = c.metadata.heard ? c.metadata.lastHeard : 0;
+      const updated = c.metadata.updated ?? lastHeard;
+      const lastObserved = c.metadata.lastObserved ?? lastHeard;
 
       result.push({
         hash: c.name,
+        observed: c.metadata.observed ?? c.metadata.heard,
         heard: c.metadata.heard ?? 0,
         lost: c.metadata.lost ?? 0,
-        updated: updatedTime,
-        lastHeard: lastHeardTime,
+        snr: c.metadata.snr ?? null,
+        rssi: c.metadata.rssi ?? null,
+        updated: updated,
+        lastObserved: lastObserved,
+        lastHeard: lastHeard,
         hitRepeaters: c.metadata.hitRepeaters ?? [],
         values: values
       });

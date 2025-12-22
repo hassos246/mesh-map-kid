@@ -1,8 +1,9 @@
 // Returns consolidated coverage and sample data.
 import * as util from '../content/shared.js';
 
-function addItem(map, id, heard, time) {
+function addItem(map, id, observed, heard, time) {
   const value = {
+    o: observed ? 1 : 0,
     h: heard ? 1 : 0,
     a: Math.round(util.ageInDays(time) * 10) / 10
   };
@@ -15,8 +16,10 @@ function addItem(map, id, heard, time) {
   }
 
   // Update the previous entry in-place.
+  // o is 0|1 for "observed" -- prefer observed.
   // h is 0|1 for "heard" -- prefer heard.
   // a is "age in days" -- prefer newest.
+  prevValue.o = Math.max(value.o, prevValue.o);
   prevValue.h = Math.max(value.h, prevValue.h);
   prevValue.a = Math.min(value.a, prevValue.a);
 }
@@ -34,9 +37,10 @@ export async function onRequest(context) {
     cursor = coverage.cursor ?? null;
     coverage.keys.forEach(c => {
       const id = c.name;
+      const observed = c.metadata.observed > 0;
       const heard = c.metadata.heard > 0;
       const updatedTime = c.metadata.updated ?? c.metadata.lastHeard;
-      addItem(tiles, id, heard, updatedTime);
+      addItem(tiles, id, observed, heard, updatedTime);
     });
   } while (cursor !== null)
 
@@ -46,9 +50,10 @@ export async function onRequest(context) {
     samplesList.keys.forEach(s => {
       const id = s.name.substring(0, 6);
       const path = s.metadata.path ?? [];
+      const observed = s.metadata.observed ?? path.length > 0;
       const heard = path.length > 0;
       const time = s.metadata.time;
-      addItem(tiles, id, heard, time);
+      addItem(tiles, id, observed, heard, time);
     });
   } while (cursor !== null)
 

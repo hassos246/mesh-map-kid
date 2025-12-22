@@ -130,3 +130,16 @@ export async function retry(func, maxRetries = 5, retryDelayMs = 500) {
     }
   }
 }
+
+export function definedOr(fn, a, b) {
+  if (a != null && b != null)
+    return fn(a, b);
+
+  if (a == null && b == null)
+    return null;
+
+  return a != null ? a : b;
+}
+
+export function or(a, b) { return a || b; }
+export function and(a, b) {return  a && b; }

@@ -10,6 +10,62 @@ const DEF_CONSOLIDATE_AGE = 0.5;
 // recent samples can eventually flip a coverage tile.
 const MAX_SAMPLES_PER_COVERAGE = 15;
 
+function consolidateSamples(samples, cutoffTime) {
+  // To avoid people spamming the coverage data and blowing
+  // up the history, merge the batch of new samples into
+  // one uber-entry per-consolidation. That way spamming
+  // has to happen over N consolidations.
+  const uberSample = {
+    time: 0,
+    observed: 0,
+    heard: 0,
+    lost: 0,
+    snr: null,
+    rssi: null,
+    lastObserved: 0,
+    lastHeard: 0,
+    repeaters: [],
+  };
+
+  // Build the uber sample.
+  samples.forEach(s => {
+    // Was this sample handled in a previous batch?
+    if (s.metadata.time <= cutoffTime)
+      return;
+
+    const path = s.metadata.path ?? [];
+    const observed = s.metadata.observed ?? path.length > 0;
+
+    uberSample.time = Math.max(s.metadata.time, uberSample.time);
+    uberSample.snr = util.definedOr(Math.max, s.metadata.snr, uberSample.snr);
+    uberSample.rssi = util.definedOr(Math.max, s.metadata.rssi, uberSample.rssi);
+
+    if (observed) {
+      uberSample.observed++;
+      uberSample.lastObserved = Math.max(s.metadata.time, uberSample.lastObserved);
+    }
+
+    if (path.length > 0) {
+      uberSample.heard++;
+      uberSample.lastHeard = Math.max(s.metadata.time, uberSample.lastHeard);
+    } else {
+      uberSample.lost++;
+    }
+
+    path.forEach(p => {
+      if (!uberSample.repeaters.includes(p))
+        uberSample.repeaters.push(p);
+    });
+  });
+
+  // If uberSample has invalid time, all samples must have
+  // been handled previously, nothing left to do.
+  if (uberSample.time === 0)
+    return null;
+  else
+    return uberSample;
+}
+
 // Merge the new coverage data with the previous (if any).
 async function mergeCoverage(key, samples, store) {
   // Get existing coverage entry (or defaults).
@@ -18,56 +74,30 @@ async function mergeCoverage(key, samples, store) {
   const prevUpdated = entry?.metadata?.updated ?? 0;
   let value = entry?.value ?? [];
 
-  // To avoid people spamming the coverage data and blowing
-  // up the history, merge the batch of new samples into
-  // one uber-entry per-consolidation. That way spamming
-  // has to happen over N consolidations.
-  const uberSample = {
-    time: 0,
-    heard: 0,
-    lost: 0,
-    lastHeard: 0,
-    repeaters: [],
-  };
-
-  // Build the uber sample.
-  samples.forEach(s => {
-    // Was this sample handled in a previous batch?
-    if (s.time <= prevUpdated)
-      return;
-
-    uberSample.time = Math.max(s.time, uberSample.time);
-
-    if (s.path?.length > 0) {
-      uberSample.heard++;
-      uberSample.lastHeard = Math.max(s.time, uberSample.lastHeard);
-      s.path.forEach(p => {
-        if (!uberSample.repeaters.includes(p))
-          uberSample.repeaters.push(p);
-      });
-    } else {
-      uberSample.lost++;
-    }
-  });
-
-  // If uberSample has invalid time, all samples must have
-  // been handled previously, nothing to do.
-  if (uberSample.time === 0)
+  const uberSample = consolidateSamples(samples, prevUpdated);
+  if (uberSample === null)
     return;
 
-  // Migrate existing values to the new format.
+  // Migrate existing values to newest format.
   value.forEach(v => {
     // An older version saved 'time' as a string. Yuck.
     v.time = Number(v.time);
 
     if (v.heard === undefined) {
-      // Old format -- update.
       const wasHeard = v.path?.length > 0;
       v.heard = wasHeard ? 1 : 0;
       v.lost = wasHeard ? 0 : 1;
       v.lastHeard = wasHeard ? v.time : 0;
       v.repeaters = v.path;
       delete v.path;
+    }
+
+    if (v.observed === undefined) {
+      // All previously "heard" entries were observed.
+      v.observed = v.heard;
+      v.snr = null;
+      v.rssi = null;
+      v.lastObserved = v.lastHeard;
     }
   });
 
@@ -81,16 +111,24 @@ async function mergeCoverage(key, samples, store) {
   
   // Compute new metadata stats, but keep the existing repeater list (for now).
   const metadata = {
+    observed: 0,
     heard: 0,
     lost: 0,
+    snr: null,
+    rssi: null,
+    lastObserved: 0,
     lastHeard: 0,
     updated: uberSample.time,
     hitRepeaters: []
   };
   const repeaterSet = new Set(prevRepeaters);
   value.forEach(v => {
+    metadata.observed += v.observed;
     metadata.heard += v.heard;
     metadata.lost += v.lost;
+    metadata.snr = util.definedOr(Math.max, metadata.snr, v.snr);
+    metadata.rssi = util.definedOr(Math.max, metadata.rssi, v.rssi);
+    metadata.lastObserved = Math.max(metadata.lastObserved, v.lastObserved);
     metadata.lastHeard = Math.max(metadata.lastHeard, v.lastHeard);
     v.repeaters.forEach(r => repeaterSet.add(r.toLowerCase()));
   });
@@ -137,8 +175,7 @@ export async function onRequest(context) {
       const key = s.name.substring(0, 6);
       util.pushMap(hashToSamples, key, {
         key: s.name,
-        time: s.metadata.time,
-        path: s.metadata.path
+        metadata: s.metadata
       });
     });
   } while (cursor !== null);
@@ -164,7 +201,7 @@ export async function onRequest(context) {
     for (const sample of v) {
       try {
         await archiveStore.put(sample.key, "", {
-          metadata: { time: sample.time, path: sample.path }
+          metadata: sample.metadata
         });
         result.archive_ok++;
         try {

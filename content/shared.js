@@ -983,19 +983,35 @@ async function retry(func, maxRetries = 5, retryDelayMs = 500) {
     }
   }
 }
+function definedOr(fn, a, b) {
+  if (a != null && b != null)
+    return fn(a, b);
+  if (a == null && b == null)
+    return null;
+  return a != null ? a : b;
+}
+function or(a, b) {
+  return a || b;
+}
+function and(a, b) {
+  return a && b;
+}
 var export_aes = import_aes_js.default;
 var export_geo = import_ngeohash.default;
 export {
   export_aes as aes,
   ageInDays,
+  and,
   centerPos,
   coverageKey,
+  definedOr,
   fromTruncatedTime,
   export_geo as geo,
   getOrAdd,
   haversineMiles,
   isValidLocation,
   maxDistanceMiles,
+  or,
   parseLocation,
   posFromHash,
   pushMap,

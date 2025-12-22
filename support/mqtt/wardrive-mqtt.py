@@ -57,12 +57,13 @@ def post_to_service(url, data):
       print(f"POST {data} failed:{e}")
 
 
-# Uploads a heard sample to the service.
+# Uploads an observed sample to the service.
 def upload_sample(lat: float, lon: float, path: list[str]):
   payload = {
     "lat": lat,
     "lon": lon,
-    "path": path
+    "path": path,
+    "observed": True
   }
   url = SERVICE_HOST + ADD_SAMPLE_URL
   post_to_service(url, payload)

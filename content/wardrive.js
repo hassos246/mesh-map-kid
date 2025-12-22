@@ -567,7 +567,7 @@ async function sendPing({ auto = false } = {}) {
   try {
     const data = { lat, lon };
     if (repeat) {
-      data.rpt = repeat.repeater;
+      data.path = [repeat.repeater];
       if (!repeat.hitMobileRepeater) {
         // Don't include signal info when using a mobile repeater.
         data.snr = repeat.lastSnr;

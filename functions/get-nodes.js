@@ -17,16 +17,18 @@ export async function onRequest(context) {
     const coverageList = await coverageStore.list({ cursor: cursor });
     cursor = coverageList.cursor ?? null;
     coverageList.keys.forEach(c => {
-      // Old coverage items only have "lastHeard".
-      const lastHeardTime = c.metadata.heard ? c.metadata.lastHeard : 0;
-      const updatedTime = c.metadata.updated ?? c.metadata.lastHeard;
+      const lastHeard = c.metadata.heard ? c.metadata.lastHeard : 0;
+      const updated = c.metadata.updated ?? lastHeard;
+      const lastObserved = c.metadata.lastObserved ?? lastHeard;
 
       const item = {
         id: c.name,
+        obs: c.metadata.observed ?? c.metadata.heard ?? 0,
         rcv: c.metadata.heard ?? 0,
         lost: c.metadata.lost ?? 0,
-        ut: util.truncateTime(updatedTime),
-        lht: util.truncateTime(lastHeardTime),
+        ut: util.truncateTime(updated),
+        lht: util.truncateTime(lastHeard),
+        lot: util.truncateTime(lastObserved),
       };
 
       // Don't send empty lists.
@@ -44,13 +46,14 @@ export async function onRequest(context) {
     const samplesList = await sampleStore.list({ cursor: cursor });
     cursor = samplesList.cursor ?? null;
     samplesList.keys.forEach(s => {
+      const path = s.metadata.path ?? [];
       const item = {
         id: s.name,
         time: util.truncateTime(s.metadata.time ?? 0),
+        obs: s.metadata.observed ?? path.length > 0
       };
 
       // Don't send empty lists.
-      const path = s.metadata.path ?? [];
       if (path.length > 0) {
         item.path = path
       };

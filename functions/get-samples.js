@@ -9,10 +9,14 @@ export async function onRequest(context) {
     const samples = await store.list({ prefix: prefix, cursor: cursor });
     cursor = samples.cursor ?? null;
     samples.keys.forEach(s => {
+      const path = s.metadata.path ?? [];
       results.push({
         hash: s.name,
         time: s.metadata.time,
-        path: s.metadata.path ?? [],
+        path: path,
+        rssi: s.metadata.rssi ?? null,
+        snr: s.metadata.snr ?? null,
+        observed: s.metadata.observed ?? path.length > 0
       });
     });
   } while (cursor !== null)
