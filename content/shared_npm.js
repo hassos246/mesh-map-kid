@@ -74,8 +74,9 @@ export function parseLocation(latStr, lonStr) {
   return [lat, lon];
 }
 
+export const dayInMillis = 24 * 60 * 60 * 1000; 
+
 export function ageInDays(time) {
-  const dayInMillis = 24 * 60 * 60 * 1000;
   return (Date.now() - new Date(time)) / dayInMillis;
 }
 

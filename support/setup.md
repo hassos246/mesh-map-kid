@@ -54,23 +54,46 @@ You're on your own here. There are lots of docs online. Definitely check out
 ## Cloudflare
 You need a Cloudflare account - you can start with a free account for testing.
 You also need a GitHub account. The app is automatically deployed from the main branch.
+
 1) Fork the [project](https://github.com/kallanreed/mesh-map).
 2) Create the new Pages app and point it at the repo.
-3) Create the required KV namespaces.
-  1) mesh-map-samples
-  2) mesh-map-repeaters
-  3) mesh-map-coverage
-  4) mesh-map-old-samples
-4) Each of the KV namespaces will have an id. Update the wrangler.jsonc with your ids.
+3) Create the required D1 database (use wrangler or the UI).
+    1) `npx wrangler d1 create mesh-map`
+    2) `npx wrangler d1 list` -- note the UUID.
+    3) Update wrangler.jsonc with your database id (and name if you used a different one).
+    4) You can use wrangler or the UI to execute queries against your data.
+4) Create the required KV namespaces (use wrangler or the UI). NOTE: the project is migrating away from KV.
+    1) mesh-map-repeaters
+    2) mesh-map-coverage
+    3) `npx wrangler kv namespace list` -- to get your UUIDs.
+4) Each of the KV namespaces will have an id. Update the wrangler.jsonc with the actual id for each namespace.
 Leave the binding names alone. Those are the names used in the code.
-5) Change the host in functions/slurp to your host. This is kind of optional because
+5) Create the tables in the DB.
+    1) `npx wrangler d1 execute mesh-map --file=./support/schema.sql --remote`
+    2) If you're running locally, you'll need to do without `--remote` to set up the local DB too. 
+6) Change the host in functions/slurp to your host. This is kind of optional because
 'slurp' is only used to pull service data locally for local testing.
-6) There are some hard coded constants in content/shared_npm.js that need to be updated.
-  * centerPos - the center of your map.
-  * maxDistanceMiles - how far out you want to consider "in" your region.
-  * Use `npx esbuild content/shared_npm.js --bundle --format=esm --outfile=content/shared.js` to regen the samples.js bundle.
-7) Commit your changes to git and push. Cloudflare should pick up your changes
+7) There are some hard coded constants in content/shared_npm.js that need to be updated.
+    * centerPos - the center of your map.
+    * maxDistanceMiles - how far out you want to consider "in" your region.
+    * Use `npx esbuild content/shared_npm.js --bundle --format=esm --outfile=content/shared.js` to regen the samples.js bundle.
+8) Commit your changes to git and push. Cloudflare should pick up your changes
 and deploy to your Pages app.
+
+### Migration
+If you have data in the samples and samples_archive KV namespaces, you can migrate your existing data into the database. This assumes you still have the bindings for SAMPLES and ARCHIVE in your wrangler.jsonc.
+
+The general process here is browse to the migration function.
+It will return a JSON blob like this:
+```
+{"archive_has_more":true,"archive_insert_time":1766523554091,"archive_migrated":500}
+```
+You if it says `has_more: true` then you will need to wait around 10 seconds and run it again. Repeat this (YOU MUST WAIT BETWEEN CALLS) until `has_more` is false.
+
+1) Migrate samples - browse to /db-migrate?op=samples
+2) Migrate archive - browse to /db-migrate?op=archive
+
+Once you have migrated, you can remove the SAMPLES and ARCHIVE bindings from wrangler.jsonc and commit.
 
 ## MQTT Client
 Under the support/mqtt folder are the scripts that you need to run somewhere. Get a Linux
@@ -92,6 +115,11 @@ the services running, use journalctl to watch the logs.
   map would show a green tile for an area that wouldn't reach the whole mesh.
 
 ### Python Setup
-TODO - but basically use venv to create a virtual environment, activate it, and then
-`pip install` all the imports in the two .py files.
+1) Set up a virtual environment `python -m venv .` and activate it `source ./bin/activate`
+2) `pip install` the following:
+    * cryptography 
+    * haversine
+    * paho-mqtt
+    * requests
+
 

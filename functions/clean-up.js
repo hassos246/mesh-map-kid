@@ -28,17 +28,6 @@ async function cleanCoverage(context, result) {
 }
 
 async function cleanSamples(context, result) {
-  // // This should mostly be done by consolidate.js
-  // const store = context.env.SAMPLES;
-  // let cursor = null;
-
-  // do {
-  //   const samples = await store.list({ cursor: cursor });
-  //   cursor = samples.cursor ?? null;
-
-  //   for (const key of samples.keys) {
-  //   }
-  // } while (cursor !== null);
 }
 
 function overlaps(a, b) {
@@ -154,6 +143,7 @@ export async function onRequest(context) {
 
     case "repeaters":
       await cleanRepeaters(context, result);
+      break;
   }
 
   return Response.json(result);

@@ -2,9 +2,10 @@
 import * as util from '../content/shared.js';
 
 // TODO: App-token for 'auth'?
+// TODO: More of this could be handled in SQL.
 
-// Samples are consolidated after they are this age.
-const DEF_CONSOLIDATE_AGE = 0.5;
+// Samples are consolidated after they are this age in days.
+const DEF_CONSOLIDATE_AGE = 1;
 
 // Only the N-newest samples are kept so that
 // recent samples can eventually flip a coverage tile.
@@ -30,29 +31,27 @@ function consolidateSamples(samples, cutoffTime) {
   // Build the uber sample.
   samples.forEach(s => {
     // Was this sample handled in a previous batch?
-    if (s.metadata.time <= cutoffTime)
+    if (s.time <= cutoffTime)
       return;
 
-    const path = s.metadata.path ?? [];
-    const observed = s.metadata.observed ?? path.length > 0;
+    uberSample.time = Math.max(s.time, uberSample.time);
+    uberSample.snr = util.definedOr(Math.max, s.snr, uberSample.snr);
+    uberSample.rssi = util.definedOr(Math.max, s.rssi, uberSample.rssi);
 
-    uberSample.time = Math.max(s.metadata.time, uberSample.time);
-    uberSample.snr = util.definedOr(Math.max, s.metadata.snr, uberSample.snr);
-    uberSample.rssi = util.definedOr(Math.max, s.metadata.rssi, uberSample.rssi);
-
-    if (observed) {
+    if (s.observed) {
       uberSample.observed++;
-      uberSample.lastObserved = Math.max(s.metadata.time, uberSample.lastObserved);
+      uberSample.lastObserved = Math.max(s.time, uberSample.lastObserved);
     }
 
-    if (path.length > 0) {
+    if (s.observed || s.repeaters.length > 0) {
       uberSample.heard++;
-      uberSample.lastHeard = Math.max(s.metadata.time, uberSample.lastHeard);
+      uberSample.lastHeard = Math.max(s.time, uberSample.lastHeard);
     } else {
       uberSample.lost++;
     }
 
-    path.forEach(p => {
+    const repeaters = JSON.parse(s.repeaters);
+    repeaters.forEach(p => {
       if (!uberSample.repeaters.includes(p))
         uberSample.repeaters.push(p);
     });
@@ -108,7 +107,7 @@ async function mergeCoverage(key, samples, store) {
     // Sort and keep the N-newest.
     value = value.toSorted((a, b) => a.time - b.time).slice(-MAX_SAMPLES_PER_COVERAGE);
   }
-  
+
   // Compute new metadata stats, but keep the existing repeater list (for now).
   const metadata = {
     observed: 0,
@@ -139,8 +138,6 @@ async function mergeCoverage(key, samples, store) {
 
 export async function onRequest(context) {
   const coverageStore = context.env.COVERAGE;
-  const sampleStore = context.env.SAMPLES;
-  const archiveStore = context.env.ARCHIVE;
 
   const url = new URL(context.request.url);
   let maxAge = url.searchParams.get('maxAge') ?? DEF_CONSOLIDATE_AGE; // Days
@@ -148,43 +145,40 @@ export async function onRequest(context) {
     maxAge = DEF_CONSOLIDATE_AGE;
 
   const result = {
-    coverage_entites_to_update: 0,
+    coverage_to_update: 0,
     samples_to_update: 0,
     merged_ok: 0,
     merged_fail: 0,
-    archive_ok: 0,
-    archive_fail: 0,
-    delete_ok: 0,
-    delete_fail: 0,
-    delete_skip: 0
+    merged_skip: 0,
   };
+  const now = Date.now();
   const hashToSamples = new Map();
-  let cursor = null;
 
-  // Build index of old samples.
-  do {
-    const samplesList = await sampleStore.list({ cursor: cursor });
-    cursor = samplesList.cursor ?? null;
+  // Get old samples.
+  const { results: samples } = await context.env.DB
+    .prepare("SELECT * FROM samples WHERE time < ?")
+    .bind(now - (maxAge * util.dayInMillis))
+    .all();
+  console.log(`Old samples:${samples.length}`);
+  result.samples_to_update = samples.length;
 
-    // Group samples by 6-digit hash
-    samplesList.keys.forEach(s => {
-      // Ignore recent samples.
-      if (util.ageInDays(s.metadata.time) < maxAge) return;
+  // Build index of old samples - group by 6-digit hash.
+  samples.forEach(s => {
+    const key = s.hash.substring(0, 6);
+    util.pushMap(hashToSamples, key, s);
+  });
+  console.log(`Coverage to update:${hashToSamples.size}`);
+  result.coverage_to_update = hashToSamples.size
 
-      result.samples_to_update++;
-      const key = s.name.substring(0, 6);
-      util.pushMap(hashToSamples, key, {
-        key: s.name,
-        metadata: s.metadata
-      });
-    });
-  } while (cursor !== null);
-
-  result.coverage_entites_to_update = hashToSamples.size
   const mergedKeys = [];
+  let mergeCount = 0;
 
   // Merge old samples into coverage items.
-  await Promise.all(hashToSamples.entries().map(async ([k, v]) => {
+  for (const [k, v] of hashToSamples.entries()) {
+    // To prevent hitting KV limits, only handle first N.
+    if (++mergeCount > 500)
+      break;
+
     try {
       await mergeCoverage(k, v, coverageStore);
       result.merged_ok++;
@@ -193,31 +187,24 @@ export async function onRequest(context) {
       console.log(`Merge failed. ${e}`);
       result.merged_fail++;
     }
-  }));
+  }
+  result.merged_skip = hashToSamples.size - (result.merged_ok + result.merged_fail);
 
   // Archive and delete the old samples.
-  await Promise.all(mergedKeys.map(async k => {
+  const cleanupStmts = [];
+  mergedKeys.forEach(k => {
     const v = hashToSamples.get(k);
     for (const sample of v) {
-      try {
-        await archiveStore.put(sample.key, "", {
-          metadata: sample.metadata
-        });
-        result.archive_ok++;
-        try {
-          await sampleStore.delete(sample.key);
-          result.delete_ok++;
-        } catch (e) {
-          console.log(`Delete failed. ${e}`);
-          result.delete_fail++;
-        }
-      } catch (e) {
-        console.log(`Archive failed. ${e}`);
-        result.archive_fail++;
-        result.delete_skip++;
-      }
+      cleanupStmts.push(context.env.DB
+        .prepare("INSERT INTO sample_archive (time, data) VALUES (?, ?)")
+        .bind(now, JSON.stringify(sample)));
+      cleanupStmts.push(context.env.DB
+        .prepare("DELETE FROM samples WHERE hash == ?")
+        .bind(sample.hash));
     }
-  }));
+  });
+  if (cleanupStmts.length > 0)
+    await context.env.DB.batch(cleanupStmts);
 
   return Response.json(result);
 }

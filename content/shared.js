@@ -1098,8 +1098,8 @@ function parseLocation(latStr, lonStr) {
   }
   return [lat, lon];
 }
+var dayInMillis = 24 * 60 * 60 * 1e3;
 function ageInDays(time) {
-  const dayInMillis = 24 * 60 * 60 * 1e3;
   return (Date.now() - new Date(time)) / dayInMillis;
 }
 function pushMap(map, key, value) {
@@ -1169,6 +1169,7 @@ export {
   and,
   centerPos,
   coverageKey,
+  dayInMillis,
   definedOr,
   fadeColor,
   fromTruncatedTime,

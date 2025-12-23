@@ -26,7 +26,6 @@ function addItem(map, id, observed, heard, time) {
 
 export async function onRequest(context) {
   const coverageStore = context.env.COVERAGE;
-  const sampleStore = context.env.SAMPLES;
   const url = new URL(context.request.url);
   const prefix = url.searchParams.get('p');
   const tiles = new Map();
@@ -44,18 +43,16 @@ export async function onRequest(context) {
     });
   } while (cursor !== null)
 
-  do {
-    const samplesList = await sampleStore.list({ prefix: prefix, cursor: cursor });
-    cursor = samplesList.cursor ?? null;
-    samplesList.keys.forEach(s => {
-      const id = s.name.substring(0, 6);
-      const path = s.metadata.path ?? [];
-      const observed = s.metadata.observed ?? path.length > 0;
-      const heard = path.length > 0;
-      const time = s.metadata.time;
-      addItem(tiles, id, observed, heard, time);
-    });
-  } while (cursor !== null)
+  const { results: samples } = await context.env.DB
+    .prepare("SELECT hash, time, repeaters, observed FROM samples").all();
+  samples.forEach(s => {
+    const id = s.hash.substring(0, 6);
+    const path = JSON.parse(s.repeaters);
+    const observed = s.observed;
+    const heard = path.length > 0;
+    const time = s.time;
+    addItem(tiles, id, observed, heard, time);
+  });
 
   return Response.json(Array.from(tiles));
 }

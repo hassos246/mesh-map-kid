@@ -17,6 +17,14 @@
       <input type="text" id="path" name="path">
     </div>
     <div class="form-item">
+      <label for="path">SNR:</label>
+      <input type="text" id="snr" name="snr">
+    </div>
+    <div class="form-item">
+      <label for="path">RSSI:</label>
+      <input type="text" id="rssi" name="rssi">
+    </div>
+    <div class="form-item">
       <label for="path">Observed:</label>
       <input type="checkbox" id="observed" name="observed">
     </div>
@@ -32,6 +40,8 @@
     const $ = (id) => document.getElementById(id);
     const locTxt = $('loc');
     const pathTxt = $('path');
+    const snrTxt = $('snr');
+    const rssiTxt = $('rssi');
     const observedCB = $('observed');
     const statusDiv = $('status');
 
@@ -46,16 +56,23 @@
     function clearForm() {
       locTxt.value = '';
       pathTxt.value = '';
+      snrTxt.value = '';
+      rssiTxt.value = '';
+      observedCB.checked = false;
     }
 
     async function putSample() {
       const [latVal, lonVal] = locTxt.value.split(/\s*,?\s+/)
       const [lat, lon] = parseLocation(latVal, lonVal);
       const pathVal = pathTxt.value;
+      const snrVal = snrTxt.value;
+      const rssiVal = rssiTxt.value;
       const payload = {
         lat: lat,
         lon: lon,
         path: pathVal !== "" ? pathVal.split(',') : [],
+        snr: snrVal !== "" ? Number(snrVal) : null,
+        rssi: rssiVal !== "" ? Number(rssiVal) : null,
         observed: observedCB.checked
       };
 

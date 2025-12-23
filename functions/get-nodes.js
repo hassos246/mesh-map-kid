@@ -4,7 +4,6 @@ import * as util from '../content/shared.js';
 
 export async function onRequest(context) {
   const coverageStore = context.env.COVERAGE;
-  const sampleStore = context.env.SAMPLES;
   const repeaterStore = context.env.REPEATERS;
   const responseData = {
     coverage: [],
@@ -46,27 +45,26 @@ export async function onRequest(context) {
 
   // Samples
   // TODO: merge samples into coverage server-side?
-  do {
-    const samplesList = await sampleStore.list({ cursor: cursor });
-    cursor = samplesList.cursor ?? null;
-    samplesList.keys.forEach(s => {
-      const path = s.metadata.path ?? [];
-      const item = {
-        id: s.name,
-        time: util.truncateTime(s.metadata.time ?? 0),
-        obs: s.metadata.observed ?? path.length > 0
-      };
+  const { results: samples } = await context.env.DB
+    .prepare("SELECT * FROM samples").run();
+  console.log(samples);
+  samples.forEach(s => {
+    const path = JSON.parse(s.repeaters);
+    const item = {
+      id: s.hash,
+      time: util.truncateTime(s.time ?? 0),
+      obs: s.observed
+    };
 
-      // Don't send empty values.
-      if (path.length > 0) {
-        item.path = path
-      };
-      if (s.metadata.snr) item.snr = s.metadata.snr;
-      if (s.metadata.rssi) item.rssi = s.metadata.rssi;
+    // Don't send empty values.
+    if (path.length > 0) {
+      item.path = path
+    };
+    if (s.snr != null) item.snr = s.snr;
+    if (s.rssi != null) item.rssi = s.rssi;
 
-      responseData.samples.push(item);
-    });
-  } while (cursor !== null)
+    responseData.samples.push(item);
+  });
 
   // Repeaters
   do {
