@@ -59,11 +59,24 @@
   <h2 class="mb-2 text-xl text-slate-100">How it works</h2>
   <div class="mb-2 pl-4 text-base">
     You send your location to #wardrive in the format "lat.xxxx lon.yyyy".
-    If the bot receives your location, a new point is added to the map indicating
+    If your location is received, a new point is added to the map indicating
     you can reach the mesh at that spot. If you want to also log places where you
     can't reach the mesh, there's a helpful web app you can run on your phone to
-    automate the process. To be "heard", your message repeats must be heard by
-    PugetMesh Haystack [86], WW7STR/PugetMesh Cougar [7e], or N7JMV-NEW-RP [53].
+    automate the process. To be considered reachable, your message repeats have to
+    be observed by one of the following MQTT observers.
+    <ul class="pl-4 text-sm list-disc">
+      <li>Discovery MQTT [33]</li>
+      <li>N7JMV-NEW-RP [53]</li>
+      <li>N7JMV/WA7LAW-EVERETT-RP [e0]</li>
+      <li>Powerline Trail [75]</li>
+      <li>PugetMesh Haystack [86]</li>
+      <li>Red Repeater [34]</li>
+      <li>W7ITL-PTDefiance-IKOKA [e8]</li>
+      <li>WW7STR/PugetMesh Cougar [7e]</li>
+      <li>Woodward Repeater [0d]</li>
+      <li>Yaletown Repeater [56]</li>
+      <li>YVR//Seafair [bf]</li>
+    </ul>
   </div>
   <div class="mb-2 pl-4 text-base">
     WA7JNJ Radio made a nice
@@ -80,7 +93,9 @@
     automatically. It also sends your ping location to the service so that
     misses are also automatically logged. You can send single pings or enable
     'auto mode' which will send a ping when you enter a coverage tile that hasn't
-    been updated recently.
+    been updated recently. The app will also listen for a repeat and send the
+    repeater and radio stats to the service. This allows you to find repeaters
+    that aren't getting repeated by the larger mesh.
   </div>
 
   <h3 class="mb-2 pl-4 text-lg text-slate-100">Using the Wardrive app</h3>

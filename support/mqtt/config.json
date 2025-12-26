@@ -7,14 +7,22 @@
 
   "service_host": "https://<service-host>.pages.dev",
   "center_position": [47.6205, -122.3494],
-  "valid_dist": 100,
+  "valid_dist": 150,
 
   "channel_hash": "e0",
   "channel_secret": "4076c315c1ef385fa93f066027320fe5",
 
   "watched_observers": [
-    "WW7STR/PugetMesh Cougar",
+    "Discovery MQTT",
+    "N7JMV-NEW-RP",
+    "N7JMV/WA7LAW-EVERETT-RP",
+    "Powerline Trail",
     "PugetMesh Haystack",
-    "N7JMV-NEW-RP"
+    "Red Repeater",
+    "W7ITL-PTDefiance-IKOKA",
+    "WW7STR/PugetMesh Cougar",
+    "Woodward Repeater",
+    "Yaletown Repeater",
+    "YVR//Seafair"
   ]
 }
