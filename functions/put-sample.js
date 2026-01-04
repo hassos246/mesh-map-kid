@@ -1,6 +1,7 @@
 import {
   geohash6,
   geohash8,
+  isValidRssi,
   parseLocation
 } from '../content/shared.js'
 
