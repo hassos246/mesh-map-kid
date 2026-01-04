@@ -15,6 +15,7 @@ import {
   geohash8,
   getPathEntry,
   isValidLocation,
+  isValidRssi,
   maxDistanceMiles,
   posFromHash
 } from "/content/shared.js";
@@ -612,7 +613,7 @@ async function sendPing({ auto = false } = {}) {
     const data = { lat, lon };
     if (repeat) {
       data.path = [repeat.repeater];
-      if (data.shouldSendRxStats) {
+      if (repeat.shouldSendRxStats) {
         data.snr = repeat.lastSnr;
         data.rssi = repeat.lastRssi;
       }
@@ -919,14 +920,10 @@ async function onLogRxData(frame) {
   if (!lastRepeater)
     return;
 
-  // Normal RSSI is around -60. Very high RSSI is usually from a mobile
-  // repeater that wasn't ignored and isn't interesting to log.
-  const rssiValid = lastRssi < -30;
-
   // If the mobile repeater wasn't hit and the RSSI is still too high,
   // that usually means there's another repeater *very* close by. Ignore
   // these packet so "heard" doesn't get polluted.
-  if (!hitMobileRepeater && !rssiValid)
+  if (!hitMobileRepeater && !isValidRssi(lastRssi))
     return;
 
   // The RX data is not interesting if someone is using a mobile repeater

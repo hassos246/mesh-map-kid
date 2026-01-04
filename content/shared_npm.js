@@ -12,6 +12,8 @@ export const dayInMillis = 24 * 60 * 60 * 1000;
 
 // About 1 minute accuracy.
 const TIME_TRUNCATION = 100000;
+
+ // Normal RSSI is around -60.
 const MAX_VALID_RSSI = -31;
 
 // Generates 8 char geohash for the given lat/lon.
