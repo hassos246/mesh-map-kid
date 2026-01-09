@@ -32,7 +32,12 @@
       <header class="flex items-center justify-between">
         <div>
           <h1 class="flex items-center gap-2 text-xl font-semibold">
-            <img id="logo" class="h-8 w-8" src="content/wardrive.png" /> MeshCore Wardrive
+            <span class="relative h-8 w-8">
+            <img id="logo" class="absolute inset-0 h-8 w-8 grayscale-30" src="content/wardrive.png" />
+            <span id="logoGlow" class="absolute inset-0 opacity-0"
+              style="border-radius: 6px; box-shadow: 0 0 20px rgb(22, 164, 12);"></span>
+            <img id="logoBright" class="absolute inset-0 h-8 w-8 saturate-200 opacity-0" src="content/wardrive.png" />
+            </span> MeshCore Wardrive
           </h1>
         </div>
         <div class="text-right text-sm">

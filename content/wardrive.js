@@ -31,8 +31,8 @@ const connectBtn = $("connectBtn");
 const sendPingBtn = $("sendPingBtn");
 const autoToggleBtn = $("autoToggleBtn");
 const ignoredRepeaterBtn = $("ignoredRepeaterBtn");
-const logoEl = $("logo");
-let logoAnimation = null;
+const logoGlowEl = $("logoGlow");
+const logoBrightEl = $("logoBright");
 
 // Channel key is derived from the channel hashtag.
 // Channel hash is derived from the channel key.
@@ -125,6 +125,9 @@ map.on("mousedown touchstart wheel dragstart", () => {
   state.following = false;
   updateFollowButton();
 });
+
+// Use to return UI thread to allow layout/paint.
+const nextPaint = () => new Promise(requestAnimationFrame);
 
 // --- Versioning ---
 const pageLoaded = Date.now();
@@ -851,15 +854,19 @@ function onDisconnected() {
 }
 
 // --- RX log handling ---
-function blinkRxLog() {
-  logoAnimation?.cancel();
-  logoAnimation = logoEl.animate(
-    [
-        { boxShadow: "0 0 18px rgba(34,197,22,1)" },
-        { boxShadow: "0 0 18px rgba(34,197,22,0)" }
-    ],
-    { duration: 300, easing: "ease-in-out", fill: "none" }
-  );
+async function blinkRxLog() {
+  logoGlowEl.style.opacity = 1;
+  logoBrightEl.style.opacity = 1;
+
+  // Wait for two render frames. Sometimes the browser
+  // just does layout and returns before painting.
+  await nextPaint();
+  await nextPaint();
+
+  setTimeout(() => {
+    logoGlowEl.style.opacity = 0;
+    logoBrightEl.style.opacity = 0;
+  }, 300);
 }
 
 function pushRxHistory(key) {
@@ -958,11 +965,8 @@ async function onLogRxData(frame) {
   // NB: It's expected to have invalid RSSI when hitMobileRepeater is true.
   const shouldSendRxStats = !hitMobileRepeater;
   if (shouldSendRxStats) {
-    requestAnimationFrame(() => blinkRxLog());
-    // Defer await so animation has a chance to run.
-    setTimeout(async () => {
-      await trySendRxSample(lastRepeater, lastSnr, lastRssi);
-    }, 0);
+    await blinkRxLog();
+    await trySendRxSample(lastRepeater, lastSnr, lastRssi);
   }
 
   const reader = new BufferReader(packet.payload);
