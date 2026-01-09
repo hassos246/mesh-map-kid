@@ -936,11 +936,17 @@ async function onLogRxData(frame) {
   const lastRssi = frame.lastRssi;
   let hitMobileRepeater = false;
   const packet = Packet.fromBytes(frame.raw);
+  const payloadType = packet.getPayloadType();
 
-  // Only care about flood group messages for RX samples.
-  if (!packet.isRouteFlood()
-    || packet.getPayloadType() != Packet.PAYLOAD_TYPE_GRP_TXT
-    || packet.path.length == 0)
+  // Ignore direct/zero-hop messages.
+  if (!packet.isRouteFlood() || packet.path.length == 0)
+    return;
+
+  // Receiving these payloads is a decent proxy for hearing the mesh.
+  // Adverts are iffy as a proxy, but it's a nice source of packets.
+  if (payloadType != Packet.PAYLOAD_TYPE_GRP_TXT
+    && payloadType != Packet.PAYLOAD_TYPE_TXT_MSG
+    && payloadType != Packet.PAYLOAD_TYPE_ADVERT)
     return;
 
   // Try to get the last hop, ignoring mobile repeaters.
@@ -968,6 +974,10 @@ async function onLogRxData(frame) {
     await blinkRxLog();
     await trySendRxSample(lastRepeater, lastSnr, lastRssi);
   }
+
+  // The rest of the code is only interested in message to #wardrive.
+  if (payloadType != Packet.PAYLOAD_TYPE_GRP_TXT)
+    return;
 
   const reader = new BufferReader(packet.payload);
   const groupHash = reader.readByte();
