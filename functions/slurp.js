@@ -12,7 +12,7 @@ export async function onRequest(context) {
   if (url.hostname !== "localhost")
     return new Response("Only works in Wrangler.");
 
-  const resp = await fetch("https://mesh-map.pages.dev/get-nodes");
+  const resp = await fetch("https://mesh-map-kid.pages.dev/get-nodes");
   const data = await resp.json();
 
   const sampleInsertStmts = data.samples.map(s => {
