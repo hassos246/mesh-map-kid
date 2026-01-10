@@ -1053,7 +1053,7 @@ var w = function(r2) {
 };
 
 // content/shared_npm.js
-var centerPos = [47.6205, -122.3494];
+var centerPos = [56.0293, 14.1565];
 var maxDistanceMiles = 150;
 var dayInMillis = 24 * 60 * 60 * 1e3;
 var TIME_TRUNCATION = 1e5;
