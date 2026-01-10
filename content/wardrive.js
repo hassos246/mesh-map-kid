@@ -56,7 +56,7 @@ const map = L.map('map', {
   tap: false,
   zoomControl: false,
   doubleClickZoom: false
-}).setView(centerPos, 10);
+}).setView(centerPos, 8);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 15,
