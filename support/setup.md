@@ -120,7 +120,7 @@ the services running, use journalctl to watch the logs.
   map would show a green tile for an area that wouldn't reach the whole mesh.
 
 ### Python Setup
-1) Set up a virtual environment `python -m venv .` and activate it `source ./bin/activate`
+1) Set up a virtual environment `python3 -m venv .` and activate it `source ./bin/activate`
 2) `pip install` the following:
     * cryptography 
     * haversine
