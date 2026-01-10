@@ -276,7 +276,7 @@ def main():
 
   try:
     print(f"Connecting to {CONFIG['mqtt_host']}:{CONFIG['mqtt_port']}");
-    client.connect(CONFIG["mqtt_host"], CONFIG["mqtt_port"], 60)
+    client.connect(CONFIG["mqtt_host"], CONFIG["mqtt_port"], 10)
     client.loop_forever()
   except Exception as e:
     print(f"An error occurred: {e}")

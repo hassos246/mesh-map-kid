@@ -3,26 +3,16 @@
   "mqtt_port": 443,
   "mqtt_username": "<USERNAME>",
   "mqtt_password": "<PASSWORD>",
-  "mqtt_topic": "meshcore/SEA/+/packets",
+  "mqtt_topic": "meshcore/<IATA>/+/packets",
 
   "service_host": "https://<service-host>.pages.dev",
-  "center_position": [47.6205, -122.3494],
+  "center_position": [56.0293, 14.1565],
   "valid_dist": 150,
 
   "channel_hash": "e0",
   "channel_secret": "4076c315c1ef385fa93f066027320fe5",
 
   "watched_observers": [
-    "Discovery MQTT",
-    "N7JMV-NEW-RP",
-    "N7JMV/WA7LAW-EVERETT-RP",
-    "Powerline Trail",
-    "PugetMesh Haystack",
-    "Red Repeater",
-    "W7ITL-PTDefiance-IKOKA",
-    "WW7STR/PugetMesh Cougar",
-    "Woodward Repeater",
-    "Yaletown Repeater",
-    "YVR//Seafair"
+    "SE KRSTD Öllsjö"
   ]
 }
