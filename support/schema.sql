@@ -86,9 +86,9 @@ WITH
       hash,
       repeater as id,
       time,
-      SUM(rssi) as rssi_sum,
-      SUM(snr) as snr_sum,
       COUNT(*) as n,
+      AVG(rssi) as rssi_avg,
+      AVG(snr) as snr_avg,
       MAX(rssi) as rssi_max,
       MAX(snr) as snr_max
     FROM v_rx_expanded
@@ -99,18 +99,18 @@ SELECT
   hash,
   MAX(time) as time,
   SUM(n) as count,
-  SUM(rssi_sum) * 1.0 / SUM(n) as rssi,
-  SUM(snr_sum) * 1.0 / SUM(n) as snr,
+  MAX(rssi_avg) as rssi,
+  MAX(snr_avg) as snr,
   json_group_array(
     json_object(
       'id', id,
       'count', n,
       'rssi_max', rssi_max,
-      'rssi_avg', (rssi_sum * 1.0 / n),
+      'rssi_avg', rssi_avg,
       'snr_max', snr_max,
-      'snr_avg', (snr_sum * 1.0 / n)
+      'snr_avg', snr_avg
     )
-    ORDER BY (rssi_sum * 1.0 / n) DESC, id
+    ORDER BY snr_avg DESC, id
   ) as repeaters
 FROM by_hash_repeater
 GROUP BY hash
