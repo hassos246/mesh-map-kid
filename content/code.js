@@ -19,7 +19,7 @@ const map = L.map('map', {
   zoomControl: false,
 }).setView(centerPos, 12);
 const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 16,
+  maxZoom: 19,
   minZoom: 8,
   attribution: '© OpenStreetMap contributors | <a href="/howto" target="_blank">Contribute</a>'
 }).addTo(map);
