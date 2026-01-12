@@ -15,42 +15,9 @@
   "_observers_note": "Use mesh_observers XOR watched_observers. mesh_observers takes precedence.",
   "mesh_observers": [
     {
-      "mesh_name": "OLM",
+      "mesh_name": "KID",
       "observers": [
-        "OlyMesh_SE"
-      ]
-    },
-    {
-      "mesh_name": "PDX",
-      "observers": [
-        "Endymion-G2",
-        "HudsonsBay",
-        "Woodward Repeater"
-      ]
-    },
-    {
-      "mesh_name": "PWT",
-      "observers": [
-        "Discovery MQTT",
-        "Red Repeater"
-      ]
-    },
-    {
-      "mesh_name": "SEA",
-      "observers": [
-        "N7JMV-NEW-RP",
-        "N7JMV/WA7LAW-EVERETT-RP",
-        "Powerline Trail",
-        "PugetMesh Haystack",
-        "W7ITL-PTDefiance-IKOKA",
-        "WW7STR/PugetMesh Cougar"
-      ]
-    },
-    {
-      "mesh_name": "YVR",
-      "observers": [
-        "Yaletown Repeater",
-        "YVR//Seafair"
+        "SE KRSTD Öllsjö"
       ]
     }
   ],
