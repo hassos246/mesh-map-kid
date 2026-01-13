@@ -154,8 +154,7 @@ def upload_repeater(id: str, name: str, lat: float, lon: float):
     'id': id,
     'name': name,
     'lat': lat,
-    'lon': lon,
-    'path': []
+    'lon': lon
   }
   url = SERVICE_HOST + ADD_REPEATER_URL
   post_to_service(url, payload)
@@ -384,14 +383,11 @@ def main():
   init_observers_map()
 
   # Initialize the MQTT client.
-  # NB: client_id must be unique per MQTT broker.
-  client_id = f'wardrive-mqtt-bot@{CONFIG["mqtt_username"]}'
-  print(f'Using MQTT client ID: {client_id}')
-
   client = mqtt.Client(
     mqtt.CallbackAPIVersion.VERSION2,
     transport='websockets',
-    client_id=client_id,
+    client_id=None,
+    clean_session=True,
     protocol=mqtt.MQTTv311)
 
   client.username_pw_set(
