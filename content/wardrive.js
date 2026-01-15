@@ -40,7 +40,7 @@ const logoBrightEl = $("logoBright");
 const wardriveChannelHash = parseInt("e0", 16);
 const wardriveChannelKey = BufferUtils.hexToBytes("4076c315c1ef385fa93f066027320fe5");
 const wardriveChannelName = "#wardrive";
-const refreshTileAge = 1; // Tiles older than this (days) will get pinged again.
+const refreshTileAge = .95; // Tiles older than this (days) will get pinged again.
 
 // --- Global Init ---
 // Map setup
