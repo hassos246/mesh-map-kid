@@ -3,7 +3,12 @@
   "mqtt_port": 443,
   "mqtt_username": "<USERNAME>",
   "mqtt_password": "<PASSWORD>",
-  "mqtt_topic": "meshcore/SEA/+/packets",
+  "mqtt_topics": [
+    "meshcore/OLM/+/packets",
+    "meshcore/PDX/+/packets",
+    "meshcore/SEA/+/packets",
+    "meshcore/YVR/+/packets"
+  ],
 
   "service_host": "https://<service-host>.pages.dev",
   "center_position": [47.6205, -122.3494],
