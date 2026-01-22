@@ -91,6 +91,20 @@ body,
   font-weight: 700;
 }
 
+#topSendersSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5em;
+  padding-right: 4px;
+}
+
+#topSendersSection .range {
+  font-size: 0.8em;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
 .mesh-control-row + .mesh-control-row {
   margin-top: 8px;
 }

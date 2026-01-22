@@ -914,6 +914,10 @@ async function trySendRxSample(repeater, lastSnr, lastRssi) {
         repeater: repeater
       }
     };
+
+    if (state.sendRadioName) {
+      data.sender = state.radioName;
+    }
     const dataStr = JSON.stringify(data);
 
     // TODO: add timeout, this is "best effort" and shouldn't block.
