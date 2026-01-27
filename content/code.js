@@ -626,8 +626,8 @@ function sampleMarker(s) {
 
 function repeaterMarker(r) {
   const time = fromTruncatedTime(r.time);
-  const stale = ageInDays(time) > 3;
-  const dead = ageInDays(time) > 8;
+  const stale = ageInDays(time) > 7;
+  const dead = ageInDays(time) > 14;
   const ageClass = (dead ? "dead" : (stale ? "stale" : ""));
   const icon = L.divIcon({
     className: '', // Don't use default Leaflet style.
