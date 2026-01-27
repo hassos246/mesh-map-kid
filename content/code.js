@@ -27,7 +27,7 @@ const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 // Control state
 let coloringMode = 'simple';
-let repeaterRenderMode = 'none';
+let repeaterRenderMode = 'all';
 let repeaterSearch = '';
 let showSamples = false;
 let useColorScale = true;
@@ -84,9 +84,9 @@ mapControl.onAdd = m => {
         <label>
           Repeaters:
           <select id="repeater-filter-select">
-            <option value="all" title="Show all repeaters">All</option>
+            <option value="all" title="Show all repeaters" selected>All</option>
             <option value="hit" title="Show repeaters hit by pings">Hit</option>
-            <option value="none" title="Hide all repeaters" selected>None</option>
+            <option value="none" title="Hide all repeaters">None</option>
           </select>
         </label>
       </div>
